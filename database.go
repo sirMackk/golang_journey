@@ -1,3 +1,6 @@
+//implement read/write database to file
+//implement interfaces
+//implement goroutines?
 package main
 
 import (
@@ -5,9 +8,8 @@ import (
     "bytes"
     "os"
     "errors"
-    //"encoding/binary"
-    //"bufio"
-    //"os"
+    "encoding/binary"
+    "bufio"
 )
 
 type Record struct {
@@ -65,19 +67,61 @@ func (self *Record) Print() {
     fmt.Println(string(self.Name))
 }
 
+func (self *Record) Serialize() []byte {
+    arr := make([]byte, 32)
+    copy(arr, self.Name)
+    return arr
+}
+
+func Deserialize(input []byte) *Record {
+    return &Record{input}
+}
+
+func (self *Database) Serialize() []byte {
+    //arr := make([]byte, self.Size * 32)
+    arr := make([]byte, 0)
+    for i := 0; i < int(self.Size); i++ {
+        arr = append(arr, self.D[i].Serialize()...)
+    }
+    return arr
+}
+
+func (self *Database) SaveDB() {
+    file, err := os.Create("database.db")
+    if err != nil { panic(err) }
+    defer func() {
+        if err := file.Close(); err != nil {
+          panic(err)
+        }
+    }()
+
+    //self.Serialize()
+    bwriter := bufio.NewWriter(file)
+    err = binary.Write(bwriter, binary.LittleEndian, self.Serialize())
+    if err != nil { panic(err) }
+
+    if err = bwriter.Flush(); err != nil { panic(err) }
+}
+
+func (self *Database) ReadBD() {
+}
+
+
+
 func main() {
     db := NewDB()
     db.Insert("Bob")
     db.Insert("Jay")
-    db.Insert("Ray")
+    //db.Insert("Ray")
     db.ShowAll()
-    db.Show(0)
-    r, err := db.Find("Jay")
-    if err != nil {
-        fmt.Println("Couldnt find shit")
-        os.Exit(1)
-    }
-    r.Print()
-    db.Delete("Jay")
-    db.ShowAll()
+    //db.Show(0)
+    //r, err := db.Find("Jay")
+    //if err != nil {
+        //fmt.Println("Couldnt find shit")
+        //os.Exit(1)
+    //}
+    //r.Print()
+    //db.Delete("Jay")
+    //db.ShowAll()
+    db.SaveDB()
 }
