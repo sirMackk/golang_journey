@@ -1,6 +1,3 @@
-//implement read/write database to file
-//implement interfaces
-//implement goroutines?
 package main
 
 import (
@@ -11,6 +8,8 @@ import (
     "encoding/binary"
     "bufio"
 )
+
+const RecordSize = 32
 
 type Record struct {
     Name []byte
@@ -27,6 +26,11 @@ func NewDB() *Database {
 
 func (self *Database) Insert(name string) {
     self.D[self.Size] = Record{Name: []byte(name)}
+    self.Size += 1
+}
+
+func (self *Database) InsertByteString(name []byte) {
+    self.D[self.Size] = Record{Name: name}
     self.Size += 1
 }
 
@@ -68,7 +72,7 @@ func (self *Record) Print() {
 }
 
 func (self *Record) Serialize() []byte {
-    arr := make([]byte, 32)
+    arr := make([]byte, RecordSize)
     copy(arr, self.Name)
     return arr
 }
@@ -78,7 +82,6 @@ func Deserialize(input []byte) *Record {
 }
 
 func (self *Database) Serialize() []byte {
-    //arr := make([]byte, self.Size * 32)
     arr := make([]byte, 0)
     for i := 0; i < int(self.Size); i++ {
         arr = append(arr, self.D[i].Serialize()...)
@@ -95,7 +98,6 @@ func (self *Database) SaveDB() {
         }
     }()
 
-    //self.Serialize()
     bwriter := bufio.NewWriter(file)
     err = binary.Write(bwriter, binary.LittleEndian, self.Serialize())
     if err != nil { panic(err) }
@@ -103,25 +105,47 @@ func (self *Database) SaveDB() {
     if err = bwriter.Flush(); err != nil { panic(err) }
 }
 
-func (self *Database) ReadBD() {
+func (self *Database) Deserialize(s []byte) {
+    for i := 0; i < len(s); i += RecordSize {
+        self.InsertByteString(s[i:i+32])
+    }
 }
 
+func (self *Database) ReadDB() {
+    file, err := os.Open("database.db")
+    if err != nil { panic(err) }
+    defer func() {
+        if err := file.Close(); err != nil {
+            panic(err)
+        }
+    }()
+
+    breader := bufio.NewReader(file)
+    buf := make([]byte, 96)
+    err = binary.Read(breader, binary.LittleEndian, &buf)
+    if err != nil { panic(err) }
+
+    self.Deserialize(buf)
+}
 
 
 func main() {
     db := NewDB()
-    db.Insert("Bob")
-    db.Insert("Jay")
+    //db.Insert("Bob")
+    //db.Insert("Jay")
     //db.Insert("Ray")
-    db.ShowAll()
-    //db.Show(0)
-    //r, err := db.Find("Jay")
-    //if err != nil {
-        //fmt.Println("Couldnt find shit")
-        //os.Exit(1)
-    //}
-    //r.Print()
-    //db.Delete("Jay")
     //db.ShowAll()
-    db.SaveDB()
+    ////db.Show(0)
+    ////r, err := db.Find("Jay")
+    ////if err != nil {
+        ////fmt.Println("Couldnt find shit")
+        ////os.Exit(1)
+    ////}
+    ////r.Print()
+    ////db.Delete("Jay")
+    ////db.ShowAll()
+    //db.SaveDB()
+    db.ReadDB()
+    db.ShowAll()
+    db.Show(0)
 }
