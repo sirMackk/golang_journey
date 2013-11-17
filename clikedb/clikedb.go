@@ -1,4 +1,4 @@
-package main
+package clikedb
 
 import (
     "fmt"
@@ -30,6 +30,7 @@ func (self *Database) Insert(name string) {
 }
 
 func (self *Database) InsertByteString(name []byte) {
+    fmt.Println(name)
     self.D[self.Size] = Record{Name: name}
     self.Size += 1
 }
@@ -107,7 +108,7 @@ func (self *Database) SaveDB() {
 
 func (self *Database) Deserialize(s []byte) {
     for i := 0; i < len(s); i += RecordSize {
-        self.InsertByteString(s[i:i+32])
+        self.InsertByteString(s[i:i+31])
     }
 }
 
@@ -128,24 +129,3 @@ func (self *Database) ReadDB() {
     self.Deserialize(buf)
 }
 
-
-func main() {
-    db := NewDB()
-    //db.Insert("Bob")
-    //db.Insert("Jay")
-    //db.Insert("Ray")
-    //db.ShowAll()
-    ////db.Show(0)
-    ////r, err := db.Find("Jay")
-    ////if err != nil {
-        ////fmt.Println("Couldnt find shit")
-        ////os.Exit(1)
-    ////}
-    ////r.Print()
-    ////db.Delete("Jay")
-    ////db.ShowAll()
-    //db.SaveDB()
-    db.ReadDB()
-    db.ShowAll()
-    db.Show(0)
-}
