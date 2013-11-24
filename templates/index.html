@@ -1,9 +1,9 @@
 {{ define "body" }}
-<h1>Index {{.Name}}</h1>
+<h1>Index </h1>
 
 <ul>
-    {{ range .Records }}
-      <li>{{ . }}</li>
+    {{ range . }}
+    <li>{{  .Title }}</li>
     {{ end }}
 </ul>
 {{ end }}
